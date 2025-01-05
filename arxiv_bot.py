@@ -163,7 +163,7 @@ class ArxivPaperAgent:
 
 def main():
     agent = ArxivPaperAgent()
-    agent.run()
+    # agent.run()
     schedule_time = agent.config['general']['schedule_time']
     schedule.every().day.at(schedule_time).do(agent.run)
     
