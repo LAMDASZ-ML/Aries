@@ -1,4 +1,4 @@
-# Arxiv LLM Paper Bot
+# Arxiv Paper to Feishu
 
 一个自动获取arXiv最新LLM相关论文并通过飞书机器人推送的工具。该机器人会使用Deepseek AI对论文进行智能筛选和总结，让您快速了解最新研究动态。
 
