@@ -12,7 +12,20 @@ import yaml
 class ArxivPaperAgent:
     def __init__(self, config_path: str = "config.yaml"):
         load_dotenv()
-        self.webhook_url = os.getenv('WEBHOOK_URL')
+        # 获取所有webhook URL
+        self.webhook_urls = []
+        i = 1
+        while True:
+            webhook_url = os.getenv(f'WEBHOOK_URL_{i}')
+            if webhook_url:
+                self.webhook_urls.append(webhook_url)
+                i += 1
+            else:
+                break
+                
+        if not self.webhook_urls:
+            raise ValueError("No webhook URLs found in environment variables")
+            
         self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
         
@@ -94,7 +107,7 @@ class ArxivPaperAgent:
         return "Failed to generate summary."
 
     def send_to_feishu(self, summaries: List[Dict], paper_type: str):
-        """发送消息到飞书"""
+        """发送消息到所有配置的飞书webhook"""
         type_config = self.config['paper_types'][paper_type]
         message = {
             "msg_type": "post",
@@ -114,8 +127,18 @@ class ArxivPaperAgent:
                 }
             }
         }
-        response = requests.post(self.webhook_url, json=message)
-        return response.status_code == 200
+        
+        results = []
+        for webhook_url in self.webhook_urls:
+            try:
+                response = requests.post(webhook_url, json=message)
+                results.append(response.status_code == 200)
+                print(f"Sent to webhook {webhook_url}: {'Success' if response.status_code == 200 else 'Failed'}")
+            except Exception as e:
+                print(f"Error sending to webhook {webhook_url}: {e}")
+                results.append(False)
+        
+        return any(results)  # 只要有一个发送成功就返回True
 
     def run(self):
         """运行主流程"""
@@ -141,12 +164,12 @@ class ArxivPaperAgent:
 def main():
     agent = ArxivPaperAgent()
     agent.run()
-    # schedule_time = agent.config['general']['schedule_time']
-    # schedule.every().day.at(schedule_time).do(agent.run)
+    schedule_time = agent.config['general']['schedule_time']
+    schedule.every().day.at(schedule_time).do(agent.run)
     
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(60)
+    while True:
+        schedule.run_pending()
+        time.sleep(60)
 
 if __name__ == "__main__":
     main() 

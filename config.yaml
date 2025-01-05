@@ -18,6 +18,6 @@ paper_types:
     
 
 general:
-  max_search_results: 40
+  max_search_results: 100
   schedule_time: "09:00"
   summary_prompt: "请根据摘要用一句话总结这篇文章的核心内容: {abstract}" 
