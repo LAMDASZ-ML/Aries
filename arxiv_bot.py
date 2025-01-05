@@ -1,40 +1,40 @@
 import os
 import arxiv
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 import schedule
 import time
 from dotenv import load_dotenv
 from typing import List, Dict
-import json
 from tqdm import tqdm
-# 加载环境变量
-load_dotenv()
+import yaml
 
 class ArxivPaperAgent:
-    def __init__(self):
+    def __init__(self, config_path: str = "config.yaml"):
+        load_dotenv()
         self.webhook_url = os.getenv('WEBHOOK_URL')
         self.deepseek_api_key = os.getenv('DEEPSEEK_API_KEY')
         self.deepseek_url = "https://api.deepseek.com/v1/chat/completions"
+        
+        # 加载配置文件
+        with open(config_path, 'r', encoding='utf-8') as f:
+            self.config = yaml.safe_load(f)
     
-    def is_relevant_paper(self, title: str, abstract: str) -> bool:
-        """使用Deepseek判断论文是否与LLM reasoning相关"""
-        if 'reasoning' in title.lower() or 'reasoning' in abstract.lower():
-            return True
-        if 'fast and slow thinking' in title.lower() or 'fast and slow thinking' in abstract.lower():
-            return True
+    def is_relevant_paper(self, title: str, abstract: str, paper_type: str) -> bool:
+        """根据配置判断论文是否相关"""
+        type_config = self.config['paper_types'][paper_type]
+        
+        # 检查关键词
+        for keyword in type_config['keywords']:
+            if keyword in title.lower() or keyword in abstract.lower():
+                return True
+                
         headers = {
             "Authorization": f"Bearer {self.deepseek_api_key}",
             "Content-Type": "application/json"
         }
         
-        prompt = f"""请判断这篇论文是否与LLM推理(reasoning)、神经符号推理、逻辑推理、搜索、MCTS相关。
-        
-        标题: {title}
-        摘要: {abstract}
-        
-        请只回答"是"或"否"。如果论文主要研究LLM的推理能力、推理方法、逻辑推理、神经符号推理、LLM search、Inference Scaling Law、Fast and Slow Thinking等主题，回答"是"；
-        如果论文主要关注其他主题，回答"否"。"""
+        prompt = type_config['prompt'].format(title=title, abstract=abstract)
         
         data = {
             "model": "deepseek-chat",
@@ -51,27 +51,25 @@ class ArxivPaperAgent:
             print(f"Error in relevance check: {e}")
             return False
 
-    def fetch_papers(self) -> List[Dict]:
-        """获取最新的LLM相关论文并筛选"""
-        # 设置搜索查询，获取更多论文以便筛选
+    def fetch_papers(self, paper_type: str) -> List[Dict]:
+        """获取指定类型的论文"""
+        type_config = self.config['paper_types'][paper_type]
         search = arxiv.Search(
-            query="cat:cs.AI AND (LLM OR 'Large Language Model Reasoning' OR 'LLM Reasoning' OR 'Neuro-Symbolic' OR 'Fast and Slow Thinking')",
-            max_results=100,  # 增加初始获取数量
+            query=type_config['search_query'],
+            max_results=self.config['general']['max_search_results'],
             sort_by=arxiv.SortCriterion.SubmittedDate
         )
-        # print([result.title for result in search.results()])
+        
         papers = []
-        for result in tqdm(search.results()):
-            # 使用Deepseek判断论文相关性
-            if self.is_relevant_paper(result.title, result.summary):
+        for result in tqdm(search.results(), desc=f"Fetching {paper_type} papers"):
+            if self.is_relevant_paper(result.title, result.summary, paper_type):
                 paper = {
                     'title': result.title,
                     'abstract': result.summary,
                     'url': result.entry_id
                 }
                 papers.append(paper)
-                # 当收集到足够的相关论文时停止
-                if len(papers) >= 10:
+                if len(papers) >= type_config['max_papers']:
                     break
         
         return papers
@@ -83,7 +81,7 @@ class ArxivPaperAgent:
             "Content-Type": "application/json"
         }
         
-        prompt = f"请根据摘要用一句话总结这篇文章的核心内容: {abstract}"
+        prompt = self.config['general']['summary_prompt'].format(abstract=abstract)
         
         data = {
             "model": "deepseek-chat",
@@ -95,14 +93,15 @@ class ArxivPaperAgent:
             return response.json()['choices'][0]['message']['content']
         return "Failed to generate summary."
 
-    def send_to_feishu(self, summaries: List[Dict]):
+    def send_to_feishu(self, summaries: List[Dict], paper_type: str):
         """发送消息到飞书"""
+        type_config = self.config['paper_types'][paper_type]
         message = {
             "msg_type": "post",
             "content": {
                 "post": {
                     "zh_cn": {
-                        "title": f"今日LLM Reasoning论文更新 - {datetime.now().strftime('%Y-%m-%d')}",
+                        "title": f"{type_config['title']} - {datetime.now().strftime('%Y-%m-%d')}",
                         "content": [
                             [{
                                 "tag": "text",
@@ -115,34 +114,39 @@ class ArxivPaperAgent:
                 }
             }
         }
-        
         response = requests.post(self.webhook_url, json=message)
         return response.status_code == 200
 
     def run(self):
         """运行主流程"""
-        papers = self.fetch_papers()
-        summaries = []
-        
-        for paper in papers:
-            summary = self.summarize_with_deepseek(paper['abstract'])
-            summaries.append({
-                'title': paper['title'],
-                'summary': summary,
-                'url': paper['url']
-            })
-        
-        self.send_to_feishu(summaries)
+        for paper_type, config in self.config['paper_types'].items():
+            if not config['enabled']:
+                continue
+                
+            papers = self.fetch_papers(paper_type)
+            if not papers:
+                continue
+                
+            summaries = []
+            for paper in papers:
+                summary = self.summarize_with_deepseek(paper['abstract'])
+                summaries.append({
+                    'title': paper['title'],
+                    'summary': summary,
+                    'url': paper['url']
+                })
+            
+            self.send_to_feishu(summaries, paper_type)
 
 def main():
     agent = ArxivPaperAgent()
-    # agent.run()
-    # 设置每天早上9点运行
-    schedule.every().day.at("09:00").do(agent.run)
+    agent.run()
+    # schedule_time = agent.config['general']['schedule_time']
+    # schedule.every().day.at(schedule_time).do(agent.run)
     
-    while True:
-        schedule.run_pending()
-        time.sleep(60)
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(60)
 
 if __name__ == "__main__":
     main() 

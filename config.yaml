@@ -1,0 +1,23 @@
+paper_types:
+  reasoning:
+    enabled: true
+    search_query: "cat:cs.AI AND (LLM OR 'Large Language Model Reasoning' OR 'LLM Reasoning' OR 'Neuro-Symbolic' OR 'Fast and Slow Thinking')"
+    keywords:
+      - reasoning
+      - fast and slow thinking
+    prompt: |
+      请判断这篇论文是否与LLM推理(reasoning)、神经符号推理、逻辑推理、搜索、MCTS相关。
+      
+      标题: {title}
+      摘要: {abstract}
+      
+      请只回答"是"或"否"。如果论文主要研究LLM的推理能力、推理方法、逻辑推理、神经符号推理、LLM search、Inference Scaling Law、Fast and Slow Thinking等主题，回答"是"；
+      如果论文主要关注其他主题，回答"否"。
+    max_papers: 10
+    title: "今日LLM Reasoning论文更新"
+    
+
+general:
+  max_search_results: 40
+  schedule_time: "09:00"
+  summary_prompt: "请根据摘要用一句话总结这篇文章的核心内容: {abstract}" 
