@@ -103,6 +103,26 @@ A tool that automatically fetches the latest LLM-related papers from arXiv and p
 
 ---
 
+## 📝 TODO List
+
+- 📚 Paper Collection & Management
+  - [x] Automatic arXiv paper fetching
+  - [ ] Paper history storage
+  - [ ] Related paper correlation analysis
+  - [ ] Paper archiving system
+
+- 🔍 Intelligent Paper Processing
+  - [x] Auto Summary: Paper summarization
+  - [ ] Auto Review: Paper review generation
+  - [ ] Auto Survey: Field survey generation
+
+- 📢 Multi-platform Distribution
+  - [x] Feishu bot integration
+  - [ ] WeChat bot integration
+  - [ ] Xiaohongshu content publishing
+
+---
+
 ## 📄 License
 
 This project is licensed under the [MIT License](https://opensource.org/license/mit).

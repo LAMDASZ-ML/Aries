@@ -100,6 +100,26 @@
 
 ---
 
+## 📝 待办事项
+
+- 📚 文章收集与管理
+  - [x] arXiv论文自动抓取
+  - [ ] 文章历史记忆存储
+  - [ ] 相关论文关联分析
+  - [ ] 论文分类归档系统
+
+- 🔍 文章智能处理
+  - [x] Auto Summary: 论文自动摘要
+  - [ ] Auto Review: 论文自动点评
+  - [ ] Auto Survey: 领域综述生成
+
+- 📢 多平台推送
+  - [x] 飞书机器人推送
+  - [ ] 微信机器人集成
+  - [ ] 小红书内容发布
+
+--- 
+
 ## License
 
-本项目使用 [MIT License](https://opensource.org/license/mit)。 
+本项目使用 [MIT License](https://opensource.org/license/mit)。
