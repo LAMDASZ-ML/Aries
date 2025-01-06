@@ -5,3 +5,6 @@ __pycache__/
 
 # Environment
 .env
+
+# Storage
+paper_history.json

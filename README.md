@@ -39,7 +39,7 @@
 
 4. 启动脚本：
    ```bash
-   python arxiv_bot.py
+   python main.py
    ```
 
 ---
@@ -51,22 +51,18 @@
 - `DEEPSEEK_API_KEY`：**必填**，用于调用 Deepseek API。
 - `WEBHOOK_URL_[n]`：**必填**，飞书机器人的 Webhook 地址，可配置多个。
 
-### 论文类型配置
+#### 配置说明：
 
-在 `config.yaml` 文件中可以为每种论文类型进行个性化配置：
+- **`paper_types`**：定义每种论文类型的具体设置。
+  - **`enabled`**：启用状态，`true` 表示启用，`false` 表示禁用。
+  - **`search_query`**：在 arXiv 上使用的搜索查询，支持逻辑条件和关键词组合。
+  - **`keywords`**：用于筛选论文的关键词列表。
+  - **`prompt`**：使用 Deepseek 或其他工具判断论文相关性的提示词，已经根据search_query和keywords生成。用户可以自行修改。
+  - **`max_papers`**：单次推送的最大论文数量（默认 5，可自行修改）。
 
-- `enabled`：是否启用该论文类型。
-- `search_query`：arXiv 搜索关键词。
-- `keywords`：初步筛选关键词列表。
-- `prompt`：判断论文相关性的 Deepseek 提示词。
-- `max_papers`：最大论文数量。
-- `title`：推送消息标题。
-
-### 通用配置
-
-- `max_search_results`：初始搜索的最大结果数。
-- `schedule_time`：定时推送时间（24 小时制）。
-- `summary_prompt`：论文总结的提示词模板。
+- **`general`**：全局配置。
+  - **`max_search_results`**：搜索返回的最大论文数量。
+  - **`schedule_time`**：每天定时任务运行时间（24 小时制）。
 
 ---
 
