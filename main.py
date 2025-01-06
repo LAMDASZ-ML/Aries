@@ -7,20 +7,14 @@ def main():
     # agent.run()  # 取消注释以立即运行一次
     
     schedule_times = agent.config.get_general_config()['schedule_time']
-    # 支持单个时间字符串或时间列表
     if isinstance(schedule_times, str):
         schedule_times = [schedule_times]
     
-    # 为每个时间点设置定时任务
     for schedule_time in schedule_times:
         schedule.every().day.at(schedule_time).do(agent.run)
         print(f"已设置定时任务：每天 {schedule_time} 运行")
     
-    print("定时任务启动中...")
     while True:
-        next_run = schedule.next_run()
-        if next_run:
-            print(f"下次运行时间：{next_run.strftime('%Y-%m-%d %H:%M:%S')}")
         schedule.run_pending()
         time.sleep(60)
 
