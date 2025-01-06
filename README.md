@@ -39,7 +39,7 @@
 
 4. 启动脚本：
    ```bash
-   python main.py
+   python arxiv_bot.py
    ```
 
 ---
@@ -92,32 +92,4 @@
 
 ## License
 
-本项目使用 [MIT License](LICENSE)。
-
----
-
-## `.env` 样例
-
-```env
-DEEPSEEK_API_KEY=your_deepseek_api_key
-WEBHOOK_URL_1=https://your_first_webhook_url
-WEBHOOK_URL_2=https://your_second_webhook_url
-```
-
----
-
-## `.gitignore` 样例
-
-```gitignore
-# Python
-__pycache__/
-*.py[cod]
-*.egg-info/
-
-# Environment
-.env
-```
-
----
-
-这样可以保证内容结构清晰易懂，用户阅读和操作更直观。
+本项目使用 [MIT License](https://opensource.org/license/mit)。
