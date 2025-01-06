@@ -32,15 +32,14 @@ class FeishuMessenger:
         
     def _send_to_webhooks(self, message: Dict) -> bool:
         results = []
-        print(message)
-        # for webhook_url in self.webhook_urls:
-        #     try:
-        #         response = requests.post(webhook_url, json=message)
-        #         success = response.status_code == 200
-        #         results.append(success)
-        #         print(f"Sent to webhook {webhook_url}: {'Success' if success else 'Failed'}")
-        #     except Exception as e:
-        #         print(f"Error sending to webhook {webhook_url}: {e}")
-        #         results.append(False)
+        for webhook_url in self.webhook_urls:
+            try:
+                response = requests.post(webhook_url, json=message)
+                success = response.status_code == 200
+                results.append(success)
+                print(f"Sent to webhook {webhook_url}: {'Success' if success else 'Failed'}")
+            except Exception as e:
+                print(f"Error sending to webhook {webhook_url}: {e}")
+                results.append(False)
                 
         return any(results) 
