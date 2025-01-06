@@ -31,13 +31,13 @@ class PaperStorage:
         self.paper_history[paper_type].add(paper_url)
         self._save_history() 
         
-    def get_latest_paper_id(self, paper_type: str) -> str:
+    def get_latest_and_oldest_paper_id(self, paper_type: str) -> tuple:
         """
-        获取指定类型中最新的论文ID
+        获取指定类型中最新的和最旧的论文ID
         """
         papers = self.paper_history.get(paper_type, set())
         if not papers:
-            return float('inf') 
+            return float('-inf'), float('inf') 
         
         try:
             paper_ids = []
@@ -45,7 +45,8 @@ class PaperStorage:
                 id_part = pid.split('/')[-1].split('v')[0]
                 paper_ids.append((pid, float(id_part)))
             
-            latest = min(paper_ids, key=lambda x: x[1])
-            return latest[1]
+            latest = max(paper_ids, key=lambda x: x[1])
+            oldest = min(paper_ids, key=lambda x: x[1])
+            return latest[1], oldest[1]
         except:
-            return float('inf') 
+            return float('-inf'), float('inf') 

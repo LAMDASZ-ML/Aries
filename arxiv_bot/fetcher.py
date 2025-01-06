@@ -29,7 +29,7 @@ class PaperFetcher:
         
         search = arxiv.Search(
             query=search_query,
-            max_results=general_config['max_search_results'],
+            max_results=general_config['max_search_results'] * max_attempts,
             sort_by=arxiv.SortCriterion.SubmittedDate
         )
         
@@ -52,12 +52,11 @@ class PaperFetcher:
                 if not current_papers:
                     break
                 
-                # 获取历史记录中最新的论文ID
-                latest_paper_id = self.storage.get_latest_paper_id(paper_type)
-                
-                # 过滤掉旧的论文
+                # 获取历史记录中最新的和最旧的论文ID
+                latest_paper_id, oldest_paper_id = self.storage.get_latest_and_oldest_paper_id(paper_type)
+                # 过滤已经推送过的论文
                 if latest_paper_id:
-                    current_papers = [r for r in current_papers if self._is_newer_paper(r.entry_id, latest_paper_id)]
+                    current_papers = [r for r in current_papers if self._is_valid_paper(r.entry_id, latest_paper_id, oldest_paper_id)]
                 
                 relevant_count = 0
                 for result in tqdm(current_papers, desc=f"🔍 正在分析论文相关性", unit="篇"):
@@ -102,11 +101,12 @@ class PaperFetcher:
         # AI 相关性检查
         return self.ai_service.check_relevance(title, abstract, type_config['prompt']) 
 
-    def _is_newer_paper(self, current_id: str, latest_id: str) -> bool:
+    def _is_valid_paper(self, current_id: str, latest_id: str, oldest_id: str) -> bool:
         """
-        比较两个论文ID，判断当前论文是否比最新的论文更新
+        比较两个论文ID，判断当前论文是否比最新的论文更新，并且比最旧的论文旧
         arxiv ID格式例如: 2403.12345v1
         """
         current_version = float(current_id.split('/')[-1].split('v')[0])
         latest_version = float(latest_id)
-        return current_version < latest_version
+        oldest_version = float(oldest_id)
+        return current_version > latest_version or current_version < oldest_version
